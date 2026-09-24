@@ -1,69 +1,277 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Job Application Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
-  form { display: grid; gap: .5rem; grid-template-columns: 1fr 1fr auto; margin-bottom: 1rem; }
-  input, select, button { padding: .5rem; }
-  ul { padding: 0; list-style: none; }
-  li { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #ddd; }
-  #stats { color: #555; }
+:root{
+  --bg:#eef1f4;--surface:#fff;--ink:#1e2a38;--on-ink:#fff;--muted:#667385;--line:#dbe1e8;
+  --applied:#4f6d8f;--interview:#b97a10;--offer:#2a8455;--rejected:#a94b47;--radius:10px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#131922;--surface:#1b232e;--ink:#e7ecf2;--on-ink:#131922;--muted:#93a0b2;--line:#2b3644;
+  --applied:#7fa0c6;--interview:#e0a23c;--offer:#4fbf85;--rejected:#e07f7a;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:1.9rem;margin:0;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:2px 0 0}
+input,textarea,select{font:inherit;color:inherit;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--surface);width:100%}
+textarea{resize:vertical;min-height:70px}
+:focus-visible{outline:2px solid var(--applied);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--on-ink);padding:9px 16px;font-weight:600}
+button:hover{opacity:.88}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500}
+kbd{font:inherit;font-size:.75rem;border:1px solid currentColor;border-radius:4px;padding:0 5px;opacity:.7;margin-left:8px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:.92rem;font-weight:500}
+.stat b{margin-left:6px}
+.stat.total{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.toolbar .search{flex:1 1 240px;max-width:380px}
+.toolbar select{width:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:5px 12px;font-size:.9rem}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start}
+.col{min-height:120px;padding:8px;border-radius:var(--radius);border:2px dashed transparent}
+.col.over{border-color:var(--c);background:color-mix(in srgb,var(--c) 8%,transparent)}
+.col h2{font-size:1rem;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.col h2 i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.col h2 span{color:var(--muted);font-weight:500}
+.card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;cursor:grab}
+.card.drag{opacity:.4}
+.card h3{margin:0;font-size:1rem}
+.role{color:var(--muted);font-size:.92rem;margin:0 0 6px}
+.notes{font-size:.88rem;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+.meta{font-size:.8rem;color:var(--muted)}
+.card a{color:var(--c);font-size:.88rem;font-weight:500}
+.row{display:flex;gap:6px;margin-top:10px}
+.row select{padding:5px 8px;font-size:.85rem;flex:1}
+.row button{padding:5px 10px;font-size:.85rem;font-weight:500}
+.del{color:var(--rejected);border-color:var(--line)}
+.empty{color:var(--muted);font-size:.9rem;border:1px dashed var(--line);border-radius:var(--radius);padding:16px;text-align:center}
+.state{text-align:center;padding:40px 16px;color:var(--muted)}
+.skel{height:86px;border-radius:var(--radius);background:var(--line);opacity:.5;margin-bottom:10px}
+.applied{--c:var(--applied)}.interview{--c:var(--interview)}.offer{--c:var(--offer)}.rejected{--c:var(--rejected)}
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(480px,92vw)}
+dialog::backdrop{background:rgba(10,15,22,.5)}
+dialog form{padding:22px;display:grid;gap:12px}
+dialog h2{margin:0;font-size:1.25rem}
+label{display:grid;gap:4px;font-size:.88rem;font-weight:600}
+.dlg-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center}
+.err{color:var(--rejected);font-size:.9rem;margin-right:auto}
+#toasts{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:grid;gap:8px;z-index:20;width:min(420px,92vw)}
+.toast{background:var(--ink);color:var(--on-ink);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:.92rem}
+.toast button{background:transparent;color:inherit;border:1px solid currentColor;padding:2px 10px;font-size:.85rem}
+@media(max-width:600px){h1{font-size:1.5rem}}
 </style>
 </head>
 <body>
-<h1>Job Application Tracker</h1>
-<p id="stats"></p>
-<form id="form">
-  <input id="company" placeholder="Company" required>
-  <input id="role" placeholder="Role" required>
-  <button>Add</button>
-</form>
-<ul id="list"></ul>
+<div class="wrap">
+  <header>
+    <div><h1>Job Application Tracker</h1><p class="sub">Drag cards between columns as your search moves forward.</p></div>
+    <button id="add" type="button">Add application<kbd>N</kbd></button>
+  </header>
+
+  <div class="stats" id="stats" aria-live="polite"></div>
+
+  <div class="toolbar">
+    <input class="search" id="q" type="search" placeholder="Search company, role or notes  ( / )" aria-label="Search applications">
+    <select id="sort" aria-label="Sort applications">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="company">Company A to Z</option>
+    </select>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<dialog id="dlg">
+  <form id="form" method="dialog">
+    <h2 id="dlgTitle">Add application</h2>
+    <label>Company<input id="company" required></label>
+    <label>Role<input id="role" required></label>
+    <label id="statusWrap" hidden>Status<select id="status"></select></label>
+    <label>Job posting link<input id="link" placeholder="https://"></label>
+    <label>Notes<textarea id="notes" placeholder="Recruiter name, salary range, next steps..."></textarea></label>
+    <div class="dlg-actions">
+      <span class="err" id="err" role="alert"></span>
+      <button type="button" class="ghost" id="cancel">Cancel</button>
+      <button type="submit" id="save">Save</button>
+    </div>
+  </form>
+</dialog>
+<div id="toasts" aria-live="polite"></div>
+
 <script>
-const STATUSES = ["applied", "interview", "offer", "rejected"];
-const json = { "Content-Type": "application/json" };
+const STATUSES = ["applied","interview","offer","rejected"];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const $ = id => document.getElementById(id);
+let items = [], filter = "all", editing = null, loaded = false, failed = null;
 
-async function load() {
-  const [apps, stats] = await Promise.all([
-    fetch("/api/applications").then(r => r.json()),
-    fetch("/api/stats").then(r => r.json()),
-  ]);
-  document.getElementById("stats").textContent =
-    `Total: ${stats.total} | ` + STATUSES.map(s => `${s}: ${stats.by_status[s]}`).join(" | ");
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-  for (const a of apps) {
-    const li = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = `${a.company} - ${a.role}`;
-    const select = document.createElement("select");
-    for (const s of STATUSES) select.add(new Option(s, s, false, s === a.status));
-    select.onchange = () => update(a.id, { status: select.value });
-    const del = document.createElement("button");
-    del.textContent = "Delete";
-    del.onclick = () => remove(a.id);
-    const right = document.createElement("span");
-    right.append(select, del);
-    li.append(label, right);
-    list.append(li);
-  }
+function el(tag, props = {}, ...kids){
+  const n = document.createElement(tag);
+  Object.entries(props).forEach(([k,v]) => k === "class" ? n.className = v : n[k] = v);
+  n.append(...kids); return n;
 }
-const update = (id, body) =>
-  fetch(`/api/applications/${id}`, { method: "PUT", headers: json, body: JSON.stringify(body) }).then(load);
-const remove = id => fetch(`/api/applications/${id}`, { method: "DELETE" }).then(load);
 
-document.getElementById("form").onsubmit = async e => {
+async function api(path, opts = {}){
+  const res = await fetch("/api" + path, {headers:{"Content-Type":"application/json"}, ...opts});
+  if(!res.ok){
+    let msg = "Something went wrong. Try again.";
+    try{
+      const b = await res.json(), e = b.errors || b.error || b.message;
+      if(e) msg = typeof e === "string" ? e : Object.values(e).join(" ");
+    }catch(_){}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function toast(text, label, fn){
+  const t = el("div",{class:"toast"}, el("span",{},text));
+  if(label){ const b = el("button",{type:"button"},label); b.onclick = () => { fn(); t.remove(); }; t.append(b); }
+  $("toasts").append(t); setTimeout(() => t.remove(), 6000);
+}
+
+async function load(){
+  try{
+    const d = await api("/applications");
+    items = Array.isArray(d) ? d : (d.applications || []);
+    failed = null;
+  }catch(e){ failed = e.message; }
+  loaded = true; render();
+}
+
+const when = a => a.date || a.applied_date || a.created_at;
+function ago(a){
+  const w = when(a); if(!w) return "";
+  const days = Math.floor((Date.now() - new Date(w)) / 864e5);
+  if(isNaN(days)) return "";
+  return days <= 0 ? "Added today" : days === 1 ? "Added yesterday" : "Added " + days + " days ago";
+}
+
+function visible(){
+  const q = $("q").value.trim().toLowerCase(), s = $("sort").value;
+  let l = items.filter(a => !q || [a.company,a.role,a.notes].join(" ").toLowerCase().includes(q));
+  const t = a => new Date(when(a) || 0).getTime() || a.id || 0;
+  if(s === "company") l.sort((a,b) => a.company.localeCompare(b.company));
+  else l.sort((a,b) => s === "oldest" ? t(a) - t(b) : t(b) - t(a));
+  return l;
+}
+
+async function move(a, status){
+  if(a.status === status) return;
+  const prev = a.status; a.status = status; render();
+  try{ await api("/applications/" + a.id,{method:"PUT",body:JSON.stringify({status})}); toast(a.company + " moved to " + cap(status)); }
+  catch(e){ a.status = prev; render(); toast(e.message); }
+}
+
+async function remove(a){
+  try{
+    await api("/applications/" + a.id,{method:"DELETE"}); await load();
+    toast("Deleted " + a.company, "Undo", async () => {
+      try{
+        const n = await api("/applications",{method:"POST",body:JSON.stringify({company:a.company,role:a.role,link:a.link||undefined,notes:a.notes||undefined})});
+        if(a.status !== "applied" && n && n.id) await api("/applications/" + n.id,{method:"PUT",body:JSON.stringify({status:a.status})});
+      }catch(e){ toast(e.message); }
+      load();
+    });
+  }catch(e){ toast(e.message); }
+}
+
+function card(a){
+  const c = el("div",{class:"card " + a.status, draggable:true});
+  c.ondragstart = e => { e.dataTransfer.setData("text/plain", String(a.id)); c.classList.add("drag"); };
+  c.ondragend = () => c.classList.remove("drag");
+  c.append(el("h3",{},a.company), el("p",{class:"role"},a.role));
+  if(a.link) c.append(el("a",{href:/^https?:\/\//i.test(a.link) ? a.link : "https://" + a.link,target:"_blank",rel:"noopener noreferrer"},"View posting"));
+  if(a.notes) c.append(el("p",{class:"notes"},a.notes));
+  if(ago(a)) c.append(el("div",{class:"meta"},ago(a)));
+  const sel = el("select",{ariaLabel:"Change status"});
+  STATUSES.forEach(s => { const o = el("option",{value:s},cap(s)); o.selected = s === a.status; sel.append(o); });
+  sel.onchange = () => move(a, sel.value);
+  const ed = el("button",{class:"ghost",type:"button"},"Edit"); ed.onclick = () => openDlg(a);
+  const del = el("button",{class:"ghost del",type:"button"},"Delete"); del.onclick = () => remove(a);
+  c.append(el("div",{class:"row"},sel,ed,del));
+  return c;
+}
+
+function render(){
+  const stats = $("stats"); stats.replaceChildren(el("span",{class:"stat total"},"Total",el("b",{},String(items.length))));
+  STATUSES.forEach(s => stats.append(el("span",{class:"stat"},cap(s),el("b",{},String(items.filter(i => i.status === s).length)))));
+  const chips = $("chips"); chips.replaceChildren();
+  ["all",...STATUSES].forEach(s => {
+    const b = el("button",{type:"button",class:"ghost"}, s === "all" ? "All" : cap(s));
+    b.setAttribute("aria-pressed", String(filter === s)); b.onclick = () => { filter = s; render(); }; chips.append(b);
+  });
+  const board = $("board"); board.replaceChildren();
+  if(!loaded){ STATUSES.forEach(() => board.append(el("div",{},el("div",{class:"skel"}),el("div",{class:"skel"})))); return; }
+  if(failed){
+    const r = el("button",{type:"button"},"Try again"); r.onclick = load;
+    board.append(el("div",{class:"state",style:"grid-column:1/-1"},el("p",{},"Could not load your applications: " + failed),r)); return;
+  }
+  const list = visible();
+  if(!items.length){
+    const b = el("button",{type:"button"},"Add your first application"); b.onclick = () => openDlg();
+    board.append(el("div",{class:"state",style:"grid-column:1/-1"},el("p",{},"No applications yet. Add one and it will appear in the Applied column."),b)); return;
+  }
+  if(!list.length){ board.append(el("div",{class:"state",style:"grid-column:1/-1"},"No applications match your search.")); return; }
+  (filter === "all" ? STATUSES : [filter]).forEach(s => {
+    const col = el("section",{class:"col " + s}), inCol = list.filter(i => i.status === s);
+    col.append(el("h2",{},el("i"),cap(s),el("span",{},String(inCol.length))));
+    inCol.forEach(a => col.append(card(a)));
+    if(!inCol.length) col.append(el("div",{class:"empty"},"Drop a card here"));
+    col.ondragover = e => { e.preventDefault(); col.classList.add("over"); };
+    col.ondragleave = () => col.classList.remove("over");
+    col.ondrop = e => { e.preventDefault(); col.classList.remove("over");
+      const a = items.find(i => String(i.id) === e.dataTransfer.getData("text/plain")); if(a) move(a, s); };
+    board.append(col);
+  });
+}
+
+function openDlg(a = null){
+  editing = a; $("err").textContent = "";
+  $("dlgTitle").textContent = a ? "Edit application" : "Add application";
+  $("company").value = a ? a.company : ""; $("role").value = a ? a.role : "";
+  $("link").value = a && a.link || ""; $("notes").value = a && a.notes || "";
+  $("statusWrap").hidden = !a;
+  $("status").replaceChildren(...STATUSES.map(s => { const o = el("option",{value:s},cap(s)); o.selected = a && a.status === s; return o; }));
+  $("dlg").showModal(); $("company").focus();
+}
+
+$("form").addEventListener("submit", async e => {
   e.preventDefault();
-  const company = document.getElementById("company").value;
-  const role = document.getElementById("role").value;
-  await fetch("/api/applications", { method: "POST", headers: json, body: JSON.stringify({ company, role }) });
-  e.target.reset();
-  load();
-};
-load();
+  const body = {company:$("company").value.trim(), role:$("role").value.trim(), link:$("link").value.trim(), notes:$("notes").value.trim()};
+  if(editing) body.status = $("status").value;
+  else { if(!body.link) delete body.link; if(!body.notes) delete body.notes; }
+  $("save").disabled = true;
+  try{
+    await api(editing ? "/applications/" + editing.id : "/applications",{method:editing ? "PUT" : "POST",body:JSON.stringify(body)});
+    $("dlg").close(); toast(editing ? "Changes saved" : "Added " + body.company); await load();
+  }catch(err){ $("err").textContent = err.message; }
+  $("save").disabled = false;
+});
+
+$("add").onclick = () => openDlg();
+$("cancel").onclick = () => $("dlg").close();
+$("dlg").addEventListener("click", e => { if(e.target === $("dlg")) $("dlg").close(); });
+$("q").oninput = render; $("sort").onchange = render;
+document.addEventListener("keydown", e => {
+  if(e.metaKey || e.ctrlKey || e.altKey || $("dlg").open || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if(e.key === "n"){ e.preventDefault(); openDlg(); }
+  if(e.key === "/"){ e.preventDefault(); $("q").focus(); }
+});
+
+render(); load();
 </script>
 </body>
 </html>
