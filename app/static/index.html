@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Application Tracker</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+  form { display: grid; gap: .5rem; grid-template-columns: 1fr 1fr auto; margin-bottom: 1rem; }
+  input, select, button { padding: .5rem; }
+  ul { padding: 0; list-style: none; }
+  li { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #ddd; }
+  #stats { color: #555; }
+</style>
+</head>
+<body>
+<h1>Job Application Tracker</h1>
+<p id="stats"></p>
+<form id="form">
+  <input id="company" placeholder="Company" required>
+  <input id="role" placeholder="Role" required>
+  <button>Add</button>
+</form>
+<ul id="list"></ul>
+<script>
+const STATUSES = ["applied", "interview", "offer", "rejected"];
+const json = { "Content-Type": "application/json" };
+
+async function load() {
+  const [apps, stats] = await Promise.all([
+    fetch("/api/applications").then(r => r.json()),
+    fetch("/api/stats").then(r => r.json()),
+  ]);
+  document.getElementById("stats").textContent =
+    `Total: ${stats.total} | ` + STATUSES.map(s => `${s}: ${stats.by_status[s]}`).join(" | ");
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  for (const a of apps) {
+    const li = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = `${a.company} - ${a.role}`;
+    const select = document.createElement("select");
+    for (const s of STATUSES) select.add(new Option(s, s, false, s === a.status));
+    select.onchange = () => update(a.id, { status: select.value });
+    const del = document.createElement("button");
+    del.textContent = "Delete";
+    del.onclick = () => remove(a.id);
+    const right = document.createElement("span");
+    right.append(select, del);
+    li.append(label, right);
+    list.append(li);
+  }
+}
+const update = (id, body) =>
+  fetch(`/api/applications/${id}`, { method: "PUT", headers: json, body: JSON.stringify(body) }).then(load);
+const remove = id => fetch(`/api/applications/${id}`, { method: "DELETE" }).then(load);
+
+document.getElementById("form").onsubmit = async e => {
+  e.preventDefault();
+  const company = document.getElementById("company").value;
+  const role = document.getElementById("role").value;
+  await fetch("/api/applications", { method: "POST", headers: json, body: JSON.stringify({ company, role }) });
+  e.target.reset();
+  load();
+};
+load();
+</script>
+</body>
+</html>
