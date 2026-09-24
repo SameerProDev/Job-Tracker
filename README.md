@@ -1,6 +1,6 @@
 # Job Application Tracker
  
-![CI](https://github.com/SameerProDev/job-tracker/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/SameerProDev/Job-Tracker/actions/workflows/ci.yml/badge.svg)
  
 A REST API with a small web UI for tracking job applications through the hiring pipeline: **applied → interview → offer / rejected**. I built it to manage my own job search.
  
@@ -10,7 +10,7 @@ A REST API with a small web UI for tracking job applications through the hiring 
 - Filter by status and view pipeline statistics
 - Input validation with clear error messages
 - Automated tests (pytest) and CI with GitHub Actions
-- Docker support for one-command deployment
+- Docker support for easy deployment
 ## Tech Stack
  
 Python 3.12, Flask, Flask-SQLAlchemy, SQLite, Gunicorn, pytest, Docker, GitHub Actions
@@ -18,8 +18,8 @@ Python 3.12, Flask, Flask-SQLAlchemy, SQLite, Gunicorn, pytest, Docker, GitHub A
 ## Getting Started
  
 ```bash
-git clone https://github.com/SameerProDev/job-tracker.git
-cd job-tracker
+git clone https://github.com/SameerProDev/Job-Tracker.git
+cd Job-Tracker
 ```
  
 Create a virtual environment and activate it:
